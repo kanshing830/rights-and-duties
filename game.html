@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rights & Responsibilities Poker Match</title>
+    <style>
+        :root {
+            --right-color: #e67e22;
+            --resp-color: #2980b9;
+            --bg-color: #1a472a; 
+            --table-color: #27ae60;
+            --card-width: 145px; 
+            --card-height: 200px; 
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background-color: var(--bg-color);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 5px;
+            overflow: hidden; 
+        }
+
+        #game-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        h1 { margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); font-size: 2rem; }
+        .subtitle { color: #ecf0f1; margin: 2px 0 10px 0; font-size: 1rem; }
+
+        #table-surface {
+            position: relative;
+            width: 980px;
+            height: 520px; 
+            background-color: var(--table-color);
+            border: 12px solid #5d4037;
+            border-radius: 180px;
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.6), 0 15px 30px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-container {
+            position: relative;
+            width: 880px;
+            height: 460px;
+        }
+
+        .card {
+            position: absolute;
+            width: var(--card-width);
+            height: var(--card-height);
+            cursor: pointer;
+            transition: transform 0.4s ease, opacity 0.6s ease;
+            left: var(--left);
+            top: var(--top);
+            transform: rotate(var(--r));
+        }
+
+        .card:hover { z-index: 100 !important; transform: rotate(0deg) scale(1.05); }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            border-radius: 12px;
+            box-shadow: 4px 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .card.flipped .card-inner { transform: rotateY(180deg); }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+            box-sizing: border-box;
+            border: 4px solid #fff;
+        }
+
+        .card-front {
+            background-color: #c0392b;
+            background-image: 
+                linear-gradient(45deg, #a52a2a 25%, transparent 25%), 
+                linear-gradient(-45deg, #a52a2a 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #a52a2a 75%), 
+                linear-gradient(-45deg, transparent 75%, #a52a2a 75%);
+            background-size: 15px 15px;
+            color: white; 
+            font-size: 60px; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .card-back {
+            background: white;
+            color: #333;
+            transform: rotateY(180deg);
+            font-size: 15px; 
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.25;
+        }
+
+        .suit-top { position: absolute; top: 8px; left: 10px; font-size: 22px; }
+        .suit-bot { position: absolute; bottom: 8px; right: 10px; font-size: 22px; transform: rotate(180deg); }
+        .watermark { position: absolute; font-size: 90px; opacity: 0.05; z-index: 0; pointer-events: none; }
+
+        .type-right { border-color: var(--right-color); color: #d35400; }
+        .type-resp { border-color: var(--resp-color); color: #2980b9; }
+
+        .matched { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .reset-btn {
+            margin-top: 15px;
+            padding: 10px 25px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 4px 0 #c0392b;
+        }
+
+        #message { margin-top: 10px; font-size: 1.3rem; height: 30px; font-weight: bold; color: #f1c40f; text-shadow: 1px 1px 2px black; }
+
+        /* Pop-up Windows */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 200;
+            justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 20px;
+            text-align: center; color: #2c3e50; max-width: 500px;
+            border: 6px solid #f1c40f;
+        }
+
+        .explanation-box {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 20px 0;
+            font-size: 1.2rem;
+        }
+        .exp-item { padding: 10px; border-radius: 10px; color: white; font-weight: bold; }
+        .exp-right { background: var(--right-color); }
+        .exp-duty { background: var(--resp-color); }
+        
+        /* SHRUNK EMOJI SIZE FROM 2rem TO 1.2rem */
+        .exp-arrow { font-size: 1.2rem; color: #2c3e50; }
+    </style>
+</head>
+<body>
+
+    <div id="game-wrapper">
+        <h1>Rights & Responsibilities</h1>
+        <p class="subtitle">Match the pairs on the high-stakes table!</p>
+
+        <div id="table-surface">
+            <div id="game-container"></div>
+        </div>
+
+        <div id="message"></div>
+        <button class="reset-btn" onclick="initGame()">Shuffle Content</button>
+    </div>
+
+    <div id="explain-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color: #27ae60">Great Match!</h2>
+            <div class="explanation-box">
+                <div id="exp-right-text" class="exp-item exp-right"></div>
+                <div class="exp-arrow">⚖️</div>
+                <div id="exp-duty-text" class="exp-item exp-duty"></div>
+            </div>
+            <p id="exp-lesson" style="font-weight: bold; font-style: italic;"></p>
+            <button class="reset-btn" style="background:#27ae60; box-shadow:0 5px 0 #219150" onclick="closeExplain()">Continue</button>
+        </div>
+    </div>
+
+    <div id="win-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="font-size: 2.2rem;">Very Good!</h2>
+            <p style="font-size: 1.1rem;">You matched all pairs perfectly. Well done!</p>
+            <button class="reset-btn" style="background:#27ae60; box-shadow:0 5px 0 #219150" onclick="location.reload()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const cardData = [
+            { text: "Right: Freedom of Speech", pair: 1, type: 'right', suit: '♠', lesson: "You can speak freely, but you cannot hurt people with lies." },
+            { text: "Responsibility: Must not defame (中傷) others", pair: 1, type: 'resp', suit: '♠' },
+            { text: "Right: Freedom of Demonstration (示威)", pair: 2, type: 'right', suit: '♥', lesson: "You can protest, but you must stay peaceful." },
+            { text: "Responsibility: Must not breach (破壞) the peace", pair: 2, type: 'resp', suit: '♥' },
+            { text: "Right: Access to Public Facilities", pair: 3, type: 'right', suit: '♦', lesson: "You can use the park, but you must also let others use it too." },
+            { text: "Responsibility: Respect rights of others to access Public Facilities", pair: 3, type: 'resp', suit: '♦' },
+            { text: "Right: Live in a Clean Environment", pair: 4, type: 'right', suit: '♣', lesson: "You can live in a clean city, but you must not throw rubbish anywhere." },
+            { text: "Responsibility: Reduce waste and not litter anywhere", pair: 4, type: 'resp', suit: '♣' },
+            { text: "Right: Enjoy Privacy", pair: 5, type: 'right', suit: '★', lesson: "You can keep your secrets safe, so you must not leak other people's information." },
+            { text: "Responsibility: Do not dox others", pair: 5, type: 'resp', suit: '★' }
+        ];
+
+        let flippedCards = [];
+        let matchedCount = 0;
+        let lockBoard = false;
+        let lastMatchedPair = null;
+
+        function getPersistentLayout() {
+            const savedPos = localStorage.getItem('pokerPositions_v4'); 
+            if (savedPos) return JSON.parse(savedPos);
+
+            const positions = [];
+            const cols = 5;
+            const rows = 2;
+            const cellWidth = 880 / cols;
+            const cellHeight = 460 / rows;
+
+            for(let i=0; i<10; i++) {
+                const row = Math.floor(i / cols);
+                const col = i % cols;
+                positions.push({
+                    left: (col * cellWidth + (Math.random() * 20 - 10)).toFixed(0),
+                    top: (row * cellHeight + (Math.random() * 20 - 10)).toFixed(0),
+                    r: (Math.random() * 12 - 6).toFixed(1)
+                });
+            }
+            localStorage.setItem('pokerPositions_v4', JSON.stringify(positions));
+            return positions;
+        }
+
+        function initGame() {
+            const container = document.getElementById('game-container');
+            container.innerHTML = '';
+            document.getElementById('message').innerText = '';
+            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+            flippedCards = [];
+            matchedCount = 0;
+            lockBoard = false;
+
+            const visualPositions = getPersistentLayout();
+            const shuffledContent = [...cardData].sort(() => Math.random() - 0.5);
+
+            shuffledContent.forEach((data, index) => {
+                const pos = visualPositions[index];
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.style.setProperty('--left', `${pos.left}px`);
+                card.style.setProperty('--top', `${pos.top}px`);
+                card.style.setProperty('--r', `${pos.r}deg`);
+                card.style.zIndex = index;
+
+                card.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-front">${index + 1}</div>
+                        <div class="card-back type-${data.type}">
+                            <div class="suit-top">${data.suit}</div>
+                            <div class="watermark">${data.suit}</div>
+                            <div style="position:relative; z-index:1">${data.text}</div>
+                            <div class="suit-bot">${data.suit}</div>
+                        </div>
+                    </div>
+                `;
+
+                card.dataset.pair = data.pair;
+                card.onclick = () => flipCard(card);
+                container.appendChild(card);
+            });
+        }
+
+        function flipCard(card) {
+            if (lockBoard || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+            card.classList.add('flipped');
+            flippedCards.push(card);
+            if (flippedCards.length === 2) checkMatch();
+        }
+
+        function checkMatch() {
+            lockBoard = true;
+            const [c1, c2] = flippedCards;
+            const isMatch = c1.dataset.pair === c2.dataset.pair;
+
+            if (isMatch) {
+                document.getElementById('message').innerText = "Yay!! You found the correct match.";
+                lastMatchedPair = c1.dataset.pair;
+                setTimeout(() => showExplanation(lastMatchedPair), 4000);
+            } else {
+                document.getElementById('message').innerText = "Not a match! Try to remember where they are.";
+                setTimeout(() => {
+                    c1.classList.remove('flipped');
+                    c2.classList.remove('flipped');
+                    document.getElementById('message').innerText = "";
+                    resetTurn();
+                }, 7000); 
+            }
+        }
+
+        function showExplanation(pairId) {
+            const pairInfo = cardData.filter(d => d.pair == pairId);
+            const right = pairInfo.find(d => d.type === 'right');
+            const duty = pairInfo.find(d => d.type === 'resp');
+
+            document.getElementById('exp-right-text').innerText = right.text;
+            document.getElementById('exp-duty-text').innerText = duty.text;
+            document.getElementById('exp-lesson').innerText = `${right.lesson}`;
+            document.getElementById('explain-modal').style.display = 'flex';
+        }
+
+        function closeExplain() {
+            document.getElementById('explain-modal').style.display = 'none';
+            const [c1, c2] = flippedCards;
+            c1.classList.add('matched');
+            c2.classList.add('matched');
+            matchedCount++;
+            resetTurn();
+            if (matchedCount === 5) {
+                document.getElementById('win-modal').style.display = 'flex';
+            }
+        }
+
+        function resetTurn() {
+            flippedCards = [];
+            lockBoard = false;
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
