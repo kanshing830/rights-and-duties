@@ -144,7 +144,6 @@
 
         #message { margin-top: 10px; font-size: 1.3rem; height: 30px; font-weight: bold; color: #f1c40f; text-shadow: 1px 1px 2px black; }
 
-        /* Pop-up Windows */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -170,7 +169,6 @@
         .exp-right { background: var(--right-color); }
         .exp-duty { background: var(--resp-color); }
         
-        /* SHRUNK EMOJI SIZE FROM 2rem TO 1.2rem */
         .exp-arrow { font-size: 1.2rem; color: #2c3e50; }
     </style>
 </head>
@@ -215,12 +213,10 @@
             { text: "Responsibility: Must not defame (中傷) others", pair: 1, type: 'resp', suit: '♠' },
             { text: "Right: Freedom of Demonstration (示威)", pair: 2, type: 'right', suit: '♥', lesson: "You can protest, but you must stay peaceful." },
             { text: "Responsibility: Must not breach (破壞) the peace", pair: 2, type: 'resp', suit: '♥' },
-            { text: "Right: Access to Public Facilities", pair: 3, type: 'right', suit: '♦', lesson: "You can use the park, but you must also let others use it too." },
-            { text: "Responsibility: Respect rights of others to access Public Facilities", pair: 3, type: 'resp', suit: '♦' },
-            { text: "Right: Live in a Clean Environment", pair: 4, type: 'right', suit: '♣', lesson: "You can live in a clean city, but you must not throw rubbish anywhere." },
-            { text: "Responsibility: Reduce waste and not litter anywhere", pair: 4, type: 'resp', suit: '♣' },
-            { text: "Right: Enjoy Privacy", pair: 5, type: 'right', suit: '★', lesson: "You can keep your secrets safe, so you must not leak other people's information." },
-            { text: "Responsibility: Do not dox others", pair: 5, type: 'resp', suit: '★' }
+            { text: "Right: Access to Public Facilities (設施)", pair: 3, type: 'right', suit: '♦', lesson: "You can use the park, but you must also let others use it too." },
+            { text: "Responsibility: Respect rights of others to access Public Facilities (設施)", pair: 3, type: 'resp', suit: '♦' },
+            { text: "Right: Enjoy Privacy", pair: 4, type: 'right', suit: '♣', lesson: "You can keep your secrets safe, so you must not leak other people's information." },
+            { text: "Responsibility: Do not dox others", pair: 4, type: 'resp', suit: '♣' }
         ];
 
         let flippedCards = [];
@@ -229,16 +225,16 @@
         let lastMatchedPair = null;
 
         function getPersistentLayout() {
-            const savedPos = localStorage.getItem('pokerPositions_v4'); 
+            const savedPos = localStorage.getItem('pokerPositions_v5'); 
             if (savedPos) return JSON.parse(savedPos);
 
             const positions = [];
-            const cols = 5;
+            const cols = 4;
             const rows = 2;
             const cellWidth = 880 / cols;
             const cellHeight = 460 / rows;
 
-            for(let i=0; i<10; i++) {
+            for(let i=0; i<8; i++) {
                 const row = Math.floor(i / cols);
                 const col = i % cols;
                 positions.push({
@@ -247,7 +243,7 @@
                     r: (Math.random() * 12 - 6).toFixed(1)
                 });
             }
-            localStorage.setItem('pokerPositions_v4', JSON.stringify(positions));
+            localStorage.setItem('pokerPositions_v5', JSON.stringify(positions));
             return positions;
         }
 
@@ -305,7 +301,7 @@
             if (isMatch) {
                 document.getElementById('message').innerText = "Yay!! You found the correct match.";
                 lastMatchedPair = c1.dataset.pair;
-                setTimeout(() => showExplanation(lastMatchedPair), 4000);
+                setTimeout(() => showExplanation(lastMatchedPair), 3000);
             } else {
                 document.getElementById('message').innerText = "Not a match! Try to remember where they are.";
                 setTimeout(() => {
@@ -335,7 +331,7 @@
             c2.classList.add('matched');
             matchedCount++;
             resetTurn();
-            if (matchedCount === 5) {
+            if (matchedCount === 4) {
                 document.getElementById('win-modal').style.display = 'flex';
             }
         }
